@@ -1,0 +1,115 @@
+---
+title: "data"
+author: "KIM MINJI"
+date: '2020 12 12 '
+output: html_document
+---
+1. 서울, 경기, 강원 지역의 국립공원 위치를 지도 상에 마커로 표시하되 국립공원의 이름을 함께 표시하시오. (국립공원 관리공단 홈페이지: http://www.knps.or.kr/portal/main.do)
+ 
+```{r}
+install.packages("ggmap", repos = "http://cran.us.r-project.org")
+install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+library(ggmap)
+register_google(key = 'AIzaSyBpRT01Ya703cY6KU8E6OwpMR2L1H7LUMo')
+
+names <- c("북한산 국립공원","설악산 국립공원","오대산 국립공원","치악산 국립공원","태백산 국립공원")
+addr <- c("경기 고양시 덕양구 대서문길 375",
+          "강원 인제군 북면 한계리",
+          "강원 홍천군 내면 오대산로 2",
+          "강원 원주시 소초면 무쇠점2길 26",
+          "강원 태백시 혈동")
+gc <- geocode(enc2utf8(addr))
+gc
+
+df <- data.frame(name=names,
+                 lon=gc$lon,
+                 lat=gc$lat)
+df
+
+cen <- c(mean(df$lon),mean(df$lat))
+map <- get_googlemap(center = cen,
+                     maptype = "roadmap",
+                     zoom=7,
+                     size=c(640,640),
+                     markers=gc)
+ggmap(map)
+
+gmap <- ggmap(map)
+gmap+geom_text(data=df,
+               aes(x=lon, y=lat),
+               size=3,
+               label=df$name)
+
+```
+
+2. treemap 패키지의 GNI2014 데이터셋을 이용하여 북아메리카(North America) 대륙에 있는 각 나라의 위치에 그 나라의 인구수를 원의 크기로 표시하시오. (원의 색은 초록색, alpha=0.5)
+
+```{r}
+install.packages("treemap", repos = "http://cran.us.r-project.org")
+library(treemap)
+
+data("GNI2014")
+head(GNI2014)
+city <- GNI2014[GNI2014$continent == 'North America', ]
+
+treemap(city,
+        index = c("continent","iso3"),
+        vSize = "population",
+        vColor = "population",
+        type = "value",
+        bg.labels = "yellow",
+        title = "North America")
+
+install.packages("MASS", repos = "http://cran.us.r-project.org")
+library(MASS)
+
+ggplot(city, aes(x=population, y=country)) +
+  geom_point(aes(size=population), shape=21, colour="green", fill="green", alpha=0.5)
+```
+3. 스티브 잡스의 스탠포드 대학 졸업식 연설문에 대해 워드클라우드를 작성하시오. (steve Jobs.txt)
+
+```{r}
+
+library(KoNLP)
+library(wordcloud)
+library(RColorBrewer)
+
+txt <- readLines("steve Jobs.txt", encoding = "UTF-8")
+buildDictionary(ext_dic = "woorimalsam")
+pal2 <- brewer.pal(8, "Dark2")
+noun <- sapply(txt,extractNoun,USE.NAMES=F)
+noun
+
+noun2 <- unlist(noun)
+wordcount <- table(noun2)
+
+temp <- sort(wordcount, decreasing = T)[1 : 10]
+temp
+temp <- temp[-1]
+temp
+
+wordcloud(names(wordcount),
+          freq = wordcount,
+          scale = c(5, 0.7),
+          min.freq = 4,
+        random.order = F,
+        rot.per = .1,
+        colors = pal2)
+```
+
+
+4. 네이버 데이터랩에서 주제어를 '캠핑'과 '텐트'로 하여 최근 1년 간의 검색 트렌드를 확인하되, 25세 이상과 30대 소비자를 대상으로 남성과 여성을 구분하고, 그래프에서 어떤 차이가 발견되는지 설명하시오.
+
+##전반적으로 캠핑 보다는 텐트에 대한 검색 비중이 높다.
+##특히, 강추위가 빠져나가면서 3월 후반부터 검색 횟수가 급증한다.
+##5월 24일 지점에서 텐트에 대한 검색 빈도가 매우 높은데 이것은 꽃이 피고 날씨가 따뜻해지면서 생기는 현상이라고 판단한다.
+##더운 여름이 지나 텐트나 캠핑하기 좋은 계절이 다가오는 9, 10월에도 검색 빈도가 높아진다.
+
+```{r}
+df <- read.csv("datalab.csv")
+df
+```
+
+5. 완성된 파일을 본인의 깃허브에 커밋하여 업로드하시오. (깃허브 주소 제출)
+
+###kmj1106
